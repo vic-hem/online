@@ -105,6 +105,20 @@ public:
         return create(host, secure ? Protocol::HttpSsl : Protocol::HttpUnencrypted, portInt);
     }
 
+    /// Create a WebSocketSession and make a request to given @url.
+    static std::shared_ptr<WebSocketSession> create(SocketPoll& socketPoll, const std::string& uri,
+                                                    const std::string& url)
+    {
+        auto session = create(uri);
+        if (session)
+        {
+            http::Request req(url);
+            session->asyncRequest(req, socketPoll);
+        }
+
+        return session;
+    }
+
     /// Returns the given protocol's default port.
     static int getDefaultPort(Protocol protocol)
     {
@@ -133,6 +147,17 @@ public:
                                  << req.getUrl());
 
         return wsRequest(req, host(), port(), isSecure(), poll);
+    }
+
+    void shutdown()
+    {
+        LOG_TRC("shutdown");
+        shutdown(true, "Shutting down");
+    }
+
+    void shutdown(bool goingAway, const std::string& statusMessage) override
+    {
+        WebSocketHandler::shutdown(goingAway, statusMessage);
     }
 
     /// Wait until the given prefix is matched and return the payload.
