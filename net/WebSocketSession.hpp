@@ -161,10 +161,11 @@ public:
     }
 
     /// Wait until the given prefix is matched and return the payload.
-    std::vector<char> waitForMessage(const std::string& prefix, std::chrono::milliseconds timeout)
+    std::vector<char> waitForMessage(const std::string& prefix, std::chrono::milliseconds timeout,
+                                     const std::string& context = std::string())
     {
         const auto deadline = std::chrono::steady_clock::now() + timeout;
-        LOG_ERR("Waiting for [" << prefix << "] for " << timeout);
+        LOG_ERR(context << "Waiting for [" << prefix << "] for " << timeout);
 
         std::unique_lock<std::mutex> lock(_mutex);
         do
@@ -173,14 +174,14 @@ public:
             while (!_queue.isEmpty())
             {
                 std::vector<char> message = _queue.pop();
-                if (matchMessage(prefix, message))
+                if (matchMessage(prefix, message, context))
                     return message;
             }
 
             // Timed wait, if we must.
         } while (_cv.wait_until(lock, deadline, [this]() { return !_queue.isEmpty(); }));
 
-        LOG_ERR("Giving up waiting for [" << prefix << "] after " << timeout);
+        LOG_ERR(context << "Giving up waiting for [" << prefix << "] after " << timeout);
         return std::vector<char>();
     }
 
@@ -193,11 +194,14 @@ private:
         _cv.notify_one();
     }
 
-    bool matchMessage(const std::string& prefix, const std::vector<char>& message)
+    bool matchMessage(const std::string& prefix, const std::vector<char>& message,
+                      const std::string& context)
     {
         const auto header = LOOLProtocol::getFirstLine(message);
-        LOG_ERR("Evaluating message: " << header);
-        return LOOLProtocol::matchPrefix(prefix, header);
+        const bool match = LOOLProtocol::matchPrefix(prefix, header);
+        LOG_ERR(context << (match ? "Matched" : "Skipped") << " message [" << prefix
+                        << "]: " << header);
+        return match;
     }
 
 private:
