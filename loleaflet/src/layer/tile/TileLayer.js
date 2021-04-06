@@ -256,6 +256,8 @@ L.TileLayer = L.GridLayer.extend({
 		this._cursorMarker = null;
 		// Graphic marker
 		this._graphicMarker = null;
+		// Graphic Selected?
+		this._hasActiveSelection = false;
 		// Selection handle marker
 		this._selectionHandles = {};
 		['start', 'end'].forEach(L.bind(function (handle) {
@@ -1166,6 +1168,7 @@ L.TileLayer = L.GridLayer.extend({
 	_resetSelectionRanges: function() {
 		this._graphicSelectionTwips = new L.Bounds(new L.Point(0, 0), new L.Point(0, 0));
 		this._graphicSelection = new L.LatLngBounds(new L.LatLng(0, 0), new L.LatLng(0, 0));
+		this._hasActiveSelection = false;
 	},
 
 	_openMobileWizard: function(data) {
@@ -3267,6 +3270,7 @@ L.TileLayer = L.GridLayer.extend({
 				this._graphicMarker.removeEmbeddedSVG();
 				this._graphicMarker.addEmbeddedSVG(extraInfo.dragInfo.svg);
 			}
+			this._hasActiveSelection = true;
 		}
 		else if (this._graphicMarker) {
 			this._graphicMarker.off('graphicmovestart graphicmoveend', this._onGraphicMove, this);

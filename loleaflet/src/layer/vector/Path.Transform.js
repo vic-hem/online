@@ -1070,7 +1070,7 @@ L.Handler.PathTransform = L.Handler.extend({
 		this._handleDragged = true;
 
 		if ((window.ThisIsAMobileApp && (this._activeMarker.options.index % 2) == 0) ||
-		    this.options.uniformScaling) {
+		    this.options.uniformScaling || this._map._docLayer.shiftKeyPressed) {
 			ratioX = originPoint.distanceTo(evt.layerPoint) / this._initialDist;
 			ratioY = ratioX;
 		} else {
